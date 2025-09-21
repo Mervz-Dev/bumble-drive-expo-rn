@@ -1,5 +1,8 @@
+import { supabase } from "@/services/supabase";
 import MapboxGL from "@rnmapbox/maps";
+import { Session } from "@supabase/supabase-js";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 
 const { width, height } = Dimensions.get("window");
@@ -11,10 +14,26 @@ MapboxGL.setAccessToken(TOKEN);
 
 const Home = () => {
   const onStartPress = () => {
-    router.push({
-      pathname: "/search-destination",
-    });
+    if (session && session.user) {
+      router.push({
+        pathname: "/search-destination",
+      });
+    } else {
+      router.push({
+        pathname: "/(public)/login",
+      });
+    }
   };
+
+  const [session, setSession] = useState<Session | null>(null);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+  }, []);
 
   return (
     <View className="flex-1">
