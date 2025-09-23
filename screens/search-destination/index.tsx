@@ -16,10 +16,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { getRetrievePlaces, searchPlaces } from "@/services/mapbox/search";
 import { SuggestedSearch } from "@/types/app/search";
 
+import { useAuthStore } from "@/stores/authStore";
 import { Ionicons } from "@expo/vector-icons";
 
 const SearchDestination = () => {
   const router = useRouter();
+  const { logout } = useAuthStore();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SuggestedSearch[]>([]);
 
@@ -44,7 +46,7 @@ const SearchDestination = () => {
   const handleItemPress = async (item: SuggestedSearch) => {
     const res = await getRetrievePlaces(item.mapBoxId);
     router.push({
-      pathname: "/place-confirmation",
+      pathname: "/private/place-confirmation",
       params: { type: "destination", place: res ? JSON.stringify(res) : "" },
     });
     // navigate to maps with coordinates
@@ -62,7 +64,9 @@ const SearchDestination = () => {
             {/* Header with Back Button */}
 
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={async () => {
+                await logout();
+              }}
               className="w-10 h-10 items-center justify-center rounded-full bg-gray-100 shadow-sm mt-2"
             >
               <Ionicons name="arrow-back" size={22} color="#111827" />

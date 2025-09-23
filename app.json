@@ -10,7 +10,17 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mervzsdev.transportapp"
+      "bundleIdentifier": "com.mervzsdev.transportapp",
+      "infoPlist": {
+        "GIDClientID": "588993437199-vauoffa32ajechkb00raokqt6999dr6k.apps.googleusercontent.com",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.588993437199-vauoffa32ajechkb00raokqt6999dr6k"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -54,6 +64,12 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Show current location on map."
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.588993437199-vauoffa32ajechkb00raokqt6999dr6k"
         }
       ]
     ],

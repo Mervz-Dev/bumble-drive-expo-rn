@@ -1,96 +1,157 @@
-import { supabase } from "@/services/supabase";
+import { InputField } from "@/components/fields/input-field";
+import { useLoading } from "@/hooks/useLoading";
+import schema from "@/schemas/email-login-schema";
+import { useAppStore } from "@/stores/appStore";
+import { useAuthStore } from "@/stores/authStore";
+import { Auth } from "@/types/app/auth";
+import { Ionicons } from "@expo/vector-icons";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   Text,
-  TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
-export default function Auth() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+export default function Login() {
+  const { signInWithEmail, signInWithGoogle } = useAuthStore();
+  const { setFirstTimeLoggedIn } = useAppStore();
+  const loading = useLoading();
 
-  async function signInWithEmail() {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) Alert.alert(error.message);
-    setLoading(false);
+  const { control, handleSubmit } = useForm<Auth.EmailCredentials>({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    resolver: zodResolver(schema),
+    mode: "onSubmit",
+  });
 
-    router.push({
-      pathname: "/(private)/search-destination",
-    });
-  }
+  const onSignIn = async (params: Auth.Authentication) => {
+    try {
+      loading.show();
 
-  async function signUpWithEmail() {
-    setLoading(true);
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({ email, password });
-    if (error) Alert.alert(error.message);
-    if (!session)
-      Alert.alert("Please check your inbox for email verification!");
-    setLoading(false);
-  }
+      switch (params.type) {
+        case "email":
+          await signInWithEmail({
+            type: "email",
+            email: params.email,
+            password: params.password,
+          });
+          break;
+
+        case "google":
+        case "facebook":
+          await signInWithGoogle();
+          break;
+        default:
+          break;
+      }
+      setFirstTimeLoggedIn();
+    } catch (error) {
+      if (error instanceof Error) {
+        Toast.show({
+          type: "error",
+          text1: error?.message,
+        });
+      }
+
+      console.log("onEmailSignIn error: ", error);
+    } finally {
+      loading.hide();
+    }
+  };
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-gray-50 justify-center px-6"
+      className="flex-1 bg-white"
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View className="mb-8">
-        <Text className="text-3xl font-bold text-gray-800 mb-2">
-          Welcome Back
-        </Text>
-        <Text className="text-gray-500">Sign in to continue</Text>
+      <View className="absolute top-14 left-6 z-10">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="p-2 rounded-full bg-gray-100 shadow-sm active:opacity-70"
+        >
+          <Ionicons name="arrow-back" size={22} color="black" />
+        </TouchableOpacity>
       </View>
 
-      {/* Email Input */}
-      <TextInput
-        className="bg-white rounded-xl p-4 mb-4 border border-gray-300 text-gray-800"
-        placeholder="Email"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-      />
+      <View className="flex-1 justify-center px-6">
+        <View className="mb-10">
+          <Text className="text-4xl font-extrabold text-black">Welcome 👋</Text>
+          <Text className="text-gray-500 mt-2 text-base">
+            Sign in to continue your journey with{" "}
+            <Text className="text-yellow-500 font-semibold">Bumble Drive</Text>
+          </Text>
+        </View>
 
-      {/* Password Input */}
-      <TextInput
-        className="bg-white rounded-xl p-4 mb-6 border border-gray-300 text-gray-800"
-        placeholder="Password"
-        secureTextEntry
-        autoCapitalize="none"
-        value={password}
-        onChangeText={setPassword}
-      />
+        <InputField
+          control={control}
+          name="email"
+          placeholder="Email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
 
-      {/* Sign In Button */}
-      <Pressable
-        className={`bg-blue-600 rounded-xl p-4 mb-4 items-center ${loading ? "opacity-50" : ""}`}
-        onPress={signInWithEmail}
-        disabled={loading}
-      >
-        <Text className="text-white font-semibold text-lg">Sign In</Text>
-      </Pressable>
+        <InputField
+          control={control}
+          name="password"
+          placeholder="Password"
+          secureTextEntry
+        />
 
-      {/* Sign Up Button */}
-      <Pressable
-        className={`border border-blue-600 rounded-xl p-4 items-center ${loading ? "opacity-50" : ""}`}
-        onPress={signUpWithEmail}
-        disabled={loading}
-      >
-        <Text className="text-blue-600 font-semibold text-lg">Sign Up</Text>
-      </Pressable>
+        <TouchableOpacity
+          onPress={handleSubmit((values) =>
+            onSignIn({ type: "email", ...values })
+          )}
+          className="bg-black py-4 rounded-full items-center shadow-lg mb-6"
+          activeOpacity={0.9}
+        >
+          <Text className="font-bold text-yellow-400 text-lg">
+            {"Login / Sign Up"}
+          </Text>
+        </TouchableOpacity>
+
+        <View className="flex-row items-center mb-6">
+          <View className="flex-1 h-[1px] bg-gray-300" />
+          <Text className="mx-3 text-gray-400">OR</Text>
+          <View className="flex-1 h-[1px] bg-gray-300" />
+        </View>
+
+        <TouchableOpacity
+          onPress={() => onSignIn({ type: "google" })}
+          className="flex-row items-center justify-center bg-[#DB4437] py-4 rounded-full shadow-sm mb-4"
+          activeOpacity={0.9}
+        >
+          <Ionicons name="logo-google" size={20} color="white" />
+          <Text className="ml-3 font-semibold text-white">
+            Continue with Google
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => onSignIn({ type: "facebook" })}
+          className="flex-row items-center justify-center bg-[#1877F2] py-4 rounded-full shadow-sm"
+          activeOpacity={0.9}
+        >
+          <Ionicons name="logo-facebook" size={20} color="white" />
+          <Text className="ml-3 font-semibold text-white">
+            Continue with Facebook
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View className="items-center py-10 px-6">
+        <Text className="text-gray-400 text-xs text-center">
+          By continuing, you agree to our{" "}
+          <Text className="text-yellow-500">Terms</Text> &{" "}
+          <Text className="text-yellow-500">Privacy Policy</Text>.
+        </Text>
+      </View>
     </KeyboardAvoidingView>
   );
 }
