@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/stores/authStore";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -13,8 +14,13 @@ import {
 const { width, height } = Dimensions.get("window");
 
 const Home = () => {
+  const { session } = useAuthStore();
   const onStartPress = () => {
-    router.push("/login");
+    if (session) {
+      router.push("/private/search-destination");
+    } else {
+      router.push("/login");
+    }
   };
 
   return (

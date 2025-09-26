@@ -13,6 +13,8 @@ interface AuthState {
   logout: () => Promise<void>;
   signInWithEmail: (params: Auth.EmailAuth) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithPhoneNUmber: (phoneNumber: string) => Promise<void>;
+  verifyOtp: (phoneNumber: string, otp: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => {
@@ -27,16 +29,18 @@ export const useAuthStore = create<AuthState>((set) => {
       set({ session: data.session, _hydrated: true });
 
       supabase.auth.onAuthStateChange((_event, session) => {
+        console.log(session, "new session");
         set({ session });
       });
     },
 
     signInWithEmail: async (params) => {
       const { email, password } = params;
+      console.log(email, password, "yes");
       if (!email || !password) {
         throw new Error("Email and password are required for email login");
       }
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
       });
@@ -62,7 +66,25 @@ export const useAuthStore = create<AuthState>((set) => {
 
       if (error) throw new Error(error?.message);
     },
+    signInWithPhoneNUmber: async (phoneNumber) => {
+      const { data, error } = await supabase.auth.signInWithOtp({
+        phone: phoneNumber,
+      });
 
+      if (error) {
+        console.log(error, "error");
+        throw new Error(`${error.message}`);
+      }
+
+      console.log(data, "data");
+    },
+    verifyOtp: async (phoneNumber, otp) => {
+      await supabase.auth.verifyOtp({
+        phone: phoneNumber,
+        token: otp,
+        type: "sms",
+      });
+    },
     logout: async () => {
       try {
         await supabase.auth.signOut();
