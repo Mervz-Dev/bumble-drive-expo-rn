@@ -8,8 +8,10 @@ import { OtpField } from "@/components/fields";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useLoading } from "@/hooks/useLoading";
 import schema from "@/schemas/otp-verify-schema";
+import { OtpError } from "@/services/errors/otp-error";
 import { useAuthStore } from "@/stores/authStore";
 import { useBottomSheetModal } from "@gorhom/bottom-sheet";
+import Toast from "react-native-toast-message";
 
 type OtpForm = z.infer<typeof schema>;
 
@@ -18,9 +20,10 @@ interface OtpVerifyViewProps {
 }
 
 const OTP_LENGTH = 6;
+const RESEND_WAIT_SECONDS = 180;
 
 export const OtpVerifyView = ({ phoneNumber }: OtpVerifyViewProps) => {
-  const { verifyOtp, signInWithPhoneNUmber } = useAuthStore();
+  const { signInWithOtp, sendOtpToPhone } = useAuthStore();
   const loading = useLoading();
   const { dismiss } = useBottomSheetModal();
   const { control, handleSubmit, watch } = useForm<OtpForm>({
@@ -31,15 +34,22 @@ export const OtpVerifyView = ({ phoneNumber }: OtpVerifyViewProps) => {
   const otpValue = watch("otp");
   const isCanSubmit = otpValue.length === OTP_LENGTH;
 
-  const { count, reset } = useCountdown();
+  const { count, reset } = useCountdown(RESEND_WAIT_SECONDS);
 
   const onSubmitVerify = async (values: OtpForm) => {
     try {
       loading.show();
-      await verifyOtp(values.phoneNumber, values.otp);
+      await signInWithOtp(values.otp, values.phoneNumber);
       dismiss();
-    } catch (err) {
-      console.error("OTP verification failed:", err);
+    } catch (error) {
+      if (error instanceof OtpError) {
+        Toast.show({
+          type: "error",
+          text1: error?.message,
+        });
+        return;
+      }
+      console.error("OTP verification failed:", error);
     } finally {
       loading.hide();
     }
@@ -48,8 +58,8 @@ export const OtpVerifyView = ({ phoneNumber }: OtpVerifyViewProps) => {
   const handleResend = async () => {
     try {
       loading.show();
-      await signInWithPhoneNUmber(phoneNumber);
-      reset(); // restart timer
+      await sendOtpToPhone(phoneNumber);
+      reset();
     } catch (err) {
       console.error("Resend OTP failed:", err);
     } finally {

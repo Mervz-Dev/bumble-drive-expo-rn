@@ -1,28 +1,37 @@
 import LottieView from "lottie-react-native";
-import React, { createContext, ReactNode, useState } from "react";
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { View } from "react-native";
 
 interface LoadingContextType {
   show: () => void;
   hide: () => void;
-  isLoading: boolean;
 }
 
 export const LoadingContext = createContext<LoadingContextType>({
   show: () => {},
   hide: () => {},
-  isLoading: false,
 });
 
 export const LoadingProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const show = () => setIsLoading(true);
-  const hide = () => setIsLoading(false);
+  const show = useCallback(() => setIsLoading(true), []);
+  const hide = useCallback(() => setIsLoading(false), []);
+
+  const contextValue = useMemo(() => ({ show, hide }), [show, hide]);
 
   return (
-    <LoadingContext.Provider value={{ show, hide, isLoading }}>
-      {children}
+    <>
+      <LoadingContext.Provider value={contextValue}>
+        {children}
+      </LoadingContext.Provider>
+
       {isLoading && (
         <View className="absolute inset-0 bg-black/50 justify-center items-center z-50">
           <View className="rounded-2xl bg-white w-[100] h-[100] justify-center items-center">
@@ -35,6 +44,6 @@ export const LoadingProvider = ({ children }: { children: ReactNode }) => {
           </View>
         </View>
       )}
-    </LoadingContext.Provider>
+    </>
   );
 };

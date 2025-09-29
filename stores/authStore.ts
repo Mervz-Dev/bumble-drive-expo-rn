@@ -1,7 +1,6 @@
 import { supabase } from "@/services/supabase";
-import { Auth } from "@/types/app/auth";
+import { sendOtp, verifyOtp } from "@/services/supabase/sms";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Session } from "@supabase/supabase-js";
 import { create } from "zustand";
 
@@ -11,10 +10,8 @@ interface AuthState {
   setSession: (session: Session | null) => void;
   initAuth: () => void;
   logout: () => Promise<void>;
-  signInWithEmail: (params: Auth.EmailAuth) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  signInWithPhoneNUmber: (phoneNumber: string) => Promise<void>;
-  verifyOtp: (phoneNumber: string, otp: string) => Promise<void>;
+  sendOtpToPhone: (phone: string) => Promise<void>;
+  signInWithOtp: (otp: string, phone: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => {
@@ -25,65 +22,43 @@ export const useAuthStore = create<AuthState>((set) => {
     setSession: (session) => set({ session }),
 
     initAuth: async () => {
-      const { data } = await supabase.auth.getSession();
-      set({ session: data.session, _hydrated: true });
+      try {
+        const { data } = await supabase.auth.getSession();
+        set({ session: data.session, _hydrated: true });
 
-      supabase.auth.onAuthStateChange((_event, session) => {
-        console.log(session, "new session");
-        set({ session });
-      });
-    },
-
-    signInWithEmail: async (params) => {
-      const { email, password } = params;
-      console.log(email, password, "yes");
-      if (!email || !password) {
-        throw new Error("Email and password are required for email login");
-      }
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      if (error) {
-        console.log(error, "error");
-        throw new Error(`${error.message}`);
+        supabase.auth.onAuthStateChange((_event, session) => {
+          console.log(session, "new session");
+          set({ session });
+        });
+      } catch (error) {
+        console.error(error);
       }
     },
-    signInWithGoogle: async () => {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
 
-      if (userInfo.type === "cancelled") {
-        return;
+    signInWithOtp: async (otp, phone) => {
+      try {
+        const res = await verifyOtp(otp, phone);
+
+        console.log(res.data, " data here");
+
+        if (res.data.success) {
+          await supabase.auth.setSession({
+            access_token: res.data.access_token,
+            refresh_token: res.data.refresh_token,
+          });
+        }
+      } catch (error) {
+        // handle on UI
+        throw error;
       }
-
-      const { idToken } = await GoogleSignin.getTokens();
-
-      const { error } = await supabase.auth.signInWithIdToken({
-        provider: "google",
-        token: idToken,
-      });
-
-      if (error) throw new Error(error?.message);
     },
-    signInWithPhoneNUmber: async (phoneNumber) => {
-      const { data, error } = await supabase.auth.signInWithOtp({
-        phone: phoneNumber,
-      });
-
-      if (error) {
-        console.log(error, "error");
-        throw new Error(`${error.message}`);
+    sendOtpToPhone: async (phone: string) => {
+      try {
+        await sendOtp(phone);
+      } catch (error) {
+        // handle on UI
+        throw error;
       }
-
-      console.log(data, "data");
-    },
-    verifyOtp: async (phoneNumber, otp) => {
-      await supabase.auth.verifyOtp({
-        phone: phoneNumber,
-        token: otp,
-        type: "sms",
-      });
     },
     logout: async () => {
       try {

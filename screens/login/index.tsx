@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -6,6 +5,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useRef } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -29,23 +29,21 @@ import { OtpVerifyView } from "./components/otp-verify-view";
 type PhoneForm = z.infer<typeof schema>;
 
 export default function Login() {
-  const { signInWithPhoneNUmber, verifyOtp, signInWithGoogle } = useAuthStore();
+  const { sendOtpToPhone } = useAuthStore();
   const loading = useLoading();
 
   const bottomSheetRef = useRef<BottomSheetModal>(null);
 
-  // ✅ Form setup
   const { control, handleSubmit } = useForm<PhoneForm>({
     resolver: zodResolver(schema),
     defaultValues: { phoneNumber: "" },
     mode: "onSubmit",
   });
 
-  // Send OTP
   const handleSendOtp = async (values: PhoneForm) => {
     try {
       loading.show();
-      await signInWithPhoneNUmber(values.phoneNumber);
+      await sendOtpToPhone(values.phoneNumber);
       bottomSheetRef.current?.present(values.phoneNumber);
     } catch (err) {
       console.error("Send OTP failed:", err);
@@ -56,93 +54,80 @@ export default function Login() {
 
   return (
     <BottomSheetModalProvider>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <KeyboardAvoidingView
-          className="flex-1 bg-white"
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+      <>
+        <LinearGradient
+          colors={["#ffffff", "#fef9c3"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={{ flex: 1 }}
         >
-          <View className="flex-1 justify-start pt-40">
-            <View className="px-6">
-              <Text className="text-4xl font-extrabold text-black mb-3">
-                Welcome to Bumble Drive 🚖
-              </Text>
-              <Text className="text-gray-600 mb-10 text-base leading-relaxed">
-                Sign in with your{" "}
-                <Text className="text-yellow-500 font-semibold">
+          <TouchableWithoutFeedback
+            onPress={Keyboard.dismiss}
+            accessible={false}
+          >
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+              className="flex-1  mt-40 px-6"
+            >
+              <View className="flex-row items-center mb-2">
+                <Text className="text-4xl font-extrabold text-black">
+                  Bumble Drive 🐝
+                </Text>
+              </View>
+              <Text className="text-gray-700 mb-8 text-base leading-relaxed">
+                Sign in securely with your{" "}
+                <Text className="text-yellow-600 font-semibold">
                   phone number
-                </Text>{" "}
-                to start your journey. Fast, simple, and secure ✨
+                </Text>
+                . Quick. Simple. Safe.
               </Text>
 
               <PhoneInputField control={control} name="phoneNumber" />
 
               <TouchableOpacity
                 onPress={handleSubmit(handleSendOtp)}
-                className="bg-black py-4 rounded-full items-center shadow-lg mt-1 mb-6"
                 activeOpacity={0.9}
+                className="mt-2 w-full rounded-full bg-black py-4 items-center shadow-lg"
               >
-                <Text className="font-bold text-yellow-400 text-lg">
-                  Continue
-                </Text>
+                <Text className="font-bold text-white text-lg">Continue</Text>
               </TouchableOpacity>
 
-              {/* Divider */}
-              <View className="flex-row items-center mb-6">
-                <View className="flex-1 h-[1px] bg-gray-300" />
-                <Text className="mx-3 text-gray-400">OR</Text>
-                <View className="flex-1 h-[1px] bg-gray-300" />
-              </View>
-
-              {/* Google login option */}
-              <TouchableOpacity
-                onPress={() => signInWithGoogle()}
-                className="flex-row items-center justify-center bg-[#DB4437] py-4 rounded-full shadow-sm mb-4"
-                activeOpacity={0.9}
-              >
-                <Ionicons name="logo-google" size={20} color="white" />
-                <Text className="ml-3 font-semibold text-white">
-                  Continue with Google
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View className=" w-full pt-4">
-              <Text className="text-center text-gray-400 text-xs leading-relaxed px-6">
+              <Text className="text-center text-gray-500 text-xs leading-relaxed mt-6">
                 By continuing, you agree to our{" "}
-                <Text className="text-yellow-500 font-semibold">
+                <Text className="text-yellow-600 font-semibold">
                   Terms of Service
                 </Text>{" "}
                 and{" "}
-                <Text className="text-yellow-500 font-semibold">
+                <Text className="text-yellow-600 font-semibold">
                   Privacy Policy
                 </Text>
                 .
               </Text>
-            </View>
-          </View>
+            </KeyboardAvoidingView>
+          </TouchableWithoutFeedback>
+        </LinearGradient>
 
-          <BottomSheetModal
-            ref={bottomSheetRef}
-            index={1}
-            snapPoints={["70%"]}
-            backgroundStyle={{ borderRadius: 24 }}
-            backdropComponent={(props) => (
-              <BottomSheetBackdrop
-                {...props}
-                disappearsOnIndex={-1}
-                appearsOnIndex={0}
-                pressBehavior="close"
-              />
-            )}
-          >
-            {({ data }) => (
-              <BottomSheetView className="p-4 pt-6">
-                <OtpVerifyView phoneNumber={data} />
-              </BottomSheetView>
-            )}
-          </BottomSheetModal>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
+        <BottomSheetModal
+          ref={bottomSheetRef}
+          index={1}
+          snapPoints={["70%"]}
+          backgroundStyle={{ borderRadius: 24 }}
+          backdropComponent={(props) => (
+            <BottomSheetBackdrop
+              {...props}
+              disappearsOnIndex={-1}
+              appearsOnIndex={0}
+              pressBehavior="close"
+            />
+          )}
+        >
+          {({ data }) => (
+            <BottomSheetView className="p-4 pt-6">
+              <OtpVerifyView phoneNumber={data} />
+            </BottomSheetView>
+          )}
+        </BottomSheetModal>
+      </>
     </BottomSheetModalProvider>
   );
 }

@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "transport-app",
-    "slug": "transport-app",
+    "name": "Bumble Drive",
+    "slug": "bumble-drive",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "transportapp",
+    "scheme": "bumbledrive",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mervzsdev.transportapp",
+      "bundleIdentifier": "com.mervzsdev.bumbledrive",
       "infoPlist": {
         "GIDClientID": "588993437199-vauoffa32ajechkb00raokqt6999dr6k.apps.googleusercontent.com",
         "CFBundleURLTypes": [
@@ -31,7 +31,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.mervzsdev.transportapp"
+      "package": "com.mervzsdev.bumbledrive"
     },
     "web": {
       "output": "static",

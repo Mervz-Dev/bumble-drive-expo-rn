@@ -1,16 +1,32 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useCountdown(initial: number = 60) {
   const [count, setCount] = useState(initial);
+  const countRef = useRef(count);
 
   useEffect(() => {
-    if (count <= 0) return;
+    countRef.current = count;
+  }, [count]);
+
+  useEffect(() => {
+    if (countRef.current <= 0) return;
+
     const timer = setInterval(() => {
-      setCount((prev) => prev - 1);
+      setCount((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [count]);
+    // Cleanup
+    return () => {
+      console.log("hiii");
+      clearInterval(timer);
+    };
+  }, []);
 
   const reset = useCallback(() => setCount(initial), [initial]);
 
