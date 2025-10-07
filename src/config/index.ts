@@ -1,16 +1,19 @@
+import Constants from "expo-constants";
+
+const envConstants = Constants.expoConfig?.extra!;
 const config = {
   supabase: {
-    url: process.env.EXPO_PUBLIC_SUPABASE_URL,
-    anonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    url: envConstants.supabase.url,
+    anonKey: envConstants.supabase.anonKey,
   },
   mapbox: {
-    apiUrl: process.env.EXPO_PUBLIC_MAPBOX_API_BASE_URL,
-    accessToken: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
+    apiUrl: envConstants.mapbox.apiUrl,
+    accessToken: envConstants.mapbox.accessToken,
   },
   posthog: {
-    apiKey: process.env.EXPO_PUBLIC_POSTHOG_API_KEY,
-    host: process.env.EXPO_PUBLIC_POSTHOG_HOST,
+    apiKey: envConstants.posthog.apiKey,
+    host: envConstants.posthog.host,
   },
-};
+} as const;
 
 export default config;
