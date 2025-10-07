@@ -9,12 +9,14 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { LoadingProvider } from "@/components/loader";
 import { useAppStore } from "@/stores/appStore";
+import { useUserStore } from "@/stores/userStore";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import Toast from "react-native-toast-message";
 import "../global.css";
 
 export default function AppLayout() {
   const { initAuth, session, _hydrated } = useAuthStore();
+  const { user } = useUserStore();
   const { isFirstTimeLoggedIn } = useAppStore();
 
   useEffect(() => {
@@ -52,6 +54,16 @@ export default function AppLayout() {
               </Stack.Protected>
 
               <Stack.Protected guard={!!session}>
+                <Stack.Protected guard={!user?.name}>
+                  <Stack.Screen
+                    name="private/enter-name"
+                    options={{
+                      headerShown: false,
+                      headerTitle: "Search Destination",
+                    }}
+                  />
+                </Stack.Protected>
+
                 <Stack.Screen
                   name="private/search-destination"
                   options={{

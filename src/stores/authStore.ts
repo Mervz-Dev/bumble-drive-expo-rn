@@ -37,6 +37,8 @@ export const useAuthStore = create<AuthState>((set) => {
               posthog.identify(session?.user?.id);
             }
 
+            console.log("auth change", session);
+
             set({ session });
           } catch (error) {
             console.error("[getUserById] error: ", error);
