@@ -5,11 +5,13 @@ import { Text, TextInput, TouchableOpacity, View } from "react-native";
 type PhoneInputFieldProps<T extends FieldValues> = {
   control: Control<T>;
   name: Path<T>;
+  autoFocus?: boolean;
 };
 
 export function PhoneInputField<T extends FieldValues>({
   control,
   name,
+  autoFocus,
 }: PhoneInputFieldProps<T>) {
   const PREFIX = "+63";
   const inputRef = useRef<TextInput | null>(null);
@@ -46,6 +48,7 @@ export function PhoneInputField<T extends FieldValues>({
                 <View className="w-px h-7 bg-gray-200 mx-3" />
 
                 <TextInput
+                  autoFocus={autoFocus}
                   ref={inputRef}
                   value={numberPart}
                   onChangeText={(text) => {

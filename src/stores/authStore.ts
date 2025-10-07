@@ -1,8 +1,11 @@
+import { posthog } from "@/services/posthog";
 import { supabase } from "@/services/supabase";
 import { sendOtp, verifyOtp } from "@/services/supabase/sms";
+import { getUserById } from "@/services/supabase/users";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Session } from "@supabase/supabase-js";
 import { create } from "zustand";
+import { useUserStore } from "./userStore";
 
 interface AuthState {
   session: Session | null;
@@ -26,12 +29,22 @@ export const useAuthStore = create<AuthState>((set) => {
         const { data } = await supabase.auth.getSession();
         set({ session: data.session, _hydrated: true });
 
-        supabase.auth.onAuthStateChange((_event, session) => {
-          console.log(session, "new session");
-          set({ session });
+        supabase.auth.onAuthStateChange(async (_event, session) => {
+          try {
+            if (session?.user?.id) {
+              const user = await getUserById(session?.user?.id);
+              useUserStore.getState().setUser(user);
+              posthog.identify(session?.user?.id);
+            }
+
+            set({ session });
+          } catch (error) {
+            console.error("[getUserById] error: ", error);
+            posthog.reset();
+          }
         });
       } catch (error) {
-        console.error(error);
+        console.error("[getSession] error: ", error);
       }
     },
 
@@ -65,10 +78,12 @@ export const useAuthStore = create<AuthState>((set) => {
         await supabase.auth.signOut();
 
         set({ session: null });
+        useUserStore.getState().clearUser();
 
         await AsyncStorage.removeItem("supabase.auth.token");
 
         console.log("✅ User logged out completely");
+        posthog.reset();
       } catch (error) {
         console.error("❌ Logout error:", error);
       }

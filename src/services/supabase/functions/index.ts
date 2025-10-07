@@ -1,7 +1,6 @@
 import config from "@/config";
 import axios from "axios";
 
-console.log(config, "CONFIGGG");
 const supabaseFunctions = axios.create({
   baseURL: `${config.supabase.url}/functions/v1/`,
 });

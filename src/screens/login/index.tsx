@@ -82,7 +82,7 @@ export default function Login() {
                 . Quick. Simple. Safe.
               </Text>
 
-              <PhoneInputField control={control} name="phoneNumber" />
+              <PhoneInputField autoFocus control={control} name="phoneNumber" />
 
               <TouchableOpacity
                 onPress={handleSubmit(handleSendOtp)}

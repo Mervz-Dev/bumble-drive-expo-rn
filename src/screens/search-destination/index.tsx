@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FlatList,
   Keyboard,
@@ -18,12 +18,20 @@ import { SuggestedSearch } from "@/types/app/search";
 
 import { useAuthStore } from "@/stores/authStore";
 import { Ionicons } from "@expo/vector-icons";
+import { usePostHog } from "posthog-react-native";
 
 const SearchDestination = () => {
   const router = useRouter();
   const { logout } = useAuthStore();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SuggestedSearch[]>([]);
+
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    console.log("triggered");
+    posthog.capture("SearchDestination loaded", { foo: "bar" });
+  }, []);
 
   const handleSearch = async (text: string) => {
     setQuery(text);
@@ -65,7 +73,7 @@ const SearchDestination = () => {
 
             <TouchableOpacity
               onPress={async () => {
-                await logout();
+                // await logout();
               }}
               className="w-10 h-10 items-center justify-center rounded-full bg-gray-100 shadow-sm mt-2"
             >

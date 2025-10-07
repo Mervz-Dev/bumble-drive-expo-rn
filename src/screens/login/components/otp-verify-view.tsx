@@ -9,6 +9,7 @@ import { useCountdown } from "@/hooks/useCountdown";
 import { useLoading } from "@/hooks/useLoading";
 import schema from "@/schemas/otp-verify-schema";
 import { OtpError } from "@/services/errors/otp-error";
+import { useAppStore } from "@/stores/appStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useBottomSheetModal } from "@gorhom/bottom-sheet";
 import Toast from "react-native-toast-message";
@@ -24,6 +25,7 @@ const RESEND_WAIT_SECONDS = 180;
 
 export const OtpVerifyView = ({ phoneNumber }: OtpVerifyViewProps) => {
   const { signInWithOtp, sendOtpToPhone } = useAuthStore();
+  const { setFirstTimeLoggedIn } = useAppStore();
   const loading = useLoading();
   const { dismiss } = useBottomSheetModal();
   const { control, handleSubmit, watch } = useForm<OtpForm>({
@@ -40,6 +42,7 @@ export const OtpVerifyView = ({ phoneNumber }: OtpVerifyViewProps) => {
     try {
       loading.show();
       await signInWithOtp(values.otp, values.phoneNumber);
+      setFirstTimeLoggedIn();
       dismiss();
     } catch (error) {
       if (error instanceof OtpError) {
