@@ -23,7 +23,6 @@ export function useCountdown(initial: number = 60) {
 
     // Cleanup
     return () => {
-      console.log("hiii");
       clearInterval(timer);
     };
   }, []);

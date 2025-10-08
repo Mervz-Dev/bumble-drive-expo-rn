@@ -24,6 +24,7 @@ import { useLoading } from "@/hooks/useLoading";
 import { useAuthStore } from "@/stores/authStore";
 
 import schema from "@/schemas/phone-login-schema";
+import { PosthogLogger } from "@/services/posthog";
 import { OtpVerifyView } from "./components/otp-verify-view";
 
 type PhoneForm = z.infer<typeof schema>;
@@ -43,9 +44,22 @@ export default function Login() {
   const handleSendOtp = async (values: PhoneForm) => {
     try {
       loading.show();
+      PosthogLogger.capture("otp_send_attempted", {
+        phone: values.phoneNumber,
+      });
+
       await sendOtpToPhone(values.phoneNumber);
+
+      PosthogLogger.capture("otp_send_success", {
+        phone: values.phoneNumber,
+      });
+
       bottomSheetRef.current?.present(values.phoneNumber);
     } catch (err) {
+      PosthogLogger.capture("otp_send_failed", {
+        phone: values.phoneNumber,
+        error: err as string,
+      });
       console.error("Send OTP failed:", err);
     } finally {
       loading.hide();

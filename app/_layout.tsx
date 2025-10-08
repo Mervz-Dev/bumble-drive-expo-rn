@@ -1,4 +1,4 @@
-import { posthog } from "@/services/posthog";
+import { posthogClient } from "@/services/posthog";
 import { supabase } from "@/services/supabase";
 import { useAuthStore } from "@/stores/authStore";
 import { Stack } from "expo-router";
@@ -41,7 +41,7 @@ export default function AppLayout() {
   }
 
   return (
-    <PostHogProvider client={posthog} debug>
+    <PostHogProvider client={posthogClient} debug>
       <LoadingProvider>
         <GestureHandlerRootView className="flex-1">
           <BottomSheetModalProvider>
@@ -56,40 +56,23 @@ export default function AppLayout() {
               <Stack.Protected guard={!!session}>
                 <Stack.Protected guard={!user?.name}>
                   <Stack.Screen
-                    name="private/enter-name"
+                    name="(user-onboarding)"
                     options={{
                       headerShown: false,
-                      headerTitle: "Search Destination",
                     }}
                   />
                 </Stack.Protected>
 
                 <Stack.Screen
-                  name="private/search-destination"
+                  name="(user-view)"
                   options={{
                     headerShown: false,
-                    headerTitle: "Search Destination",
-                  }}
-                />
-                <Stack.Screen
-                  name="private/trip-preview"
-                  options={{ headerShown: false, headerTitle: "Map Pre Book" }}
-                />
-
-                <Stack.Screen
-                  name="private/place-confirmation"
-                  options={{
-                    headerShown: false,
-                    headerTitle: "Place Confirmation",
                   }}
                 />
               </Stack.Protected>
 
               <Stack.Protected guard={!session}>
-                <Stack.Screen
-                  name="login"
-                  options={{ headerShown: false, headerTitle: "Login" }}
-                />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               </Stack.Protected>
             </Stack>
           </BottomSheetModalProvider>

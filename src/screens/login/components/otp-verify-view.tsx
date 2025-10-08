@@ -9,6 +9,7 @@ import { useCountdown } from "@/hooks/useCountdown";
 import { useLoading } from "@/hooks/useLoading";
 import schema from "@/schemas/otp-verify-schema";
 import { OtpError } from "@/services/errors/otp-error";
+import { PosthogLogger } from "@/services/posthog";
 import { useAppStore } from "@/stores/appStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useBottomSheetModal } from "@gorhom/bottom-sheet";
@@ -41,10 +42,20 @@ export const OtpVerifyView = ({ phoneNumber }: OtpVerifyViewProps) => {
   const onSubmitVerify = async (values: OtpForm) => {
     try {
       loading.show();
+      PosthogLogger.capture("otp_verify_attempted", {
+        phone: values.phoneNumber,
+      });
       await signInWithOtp(values.otp, values.phoneNumber);
+      PosthogLogger.capture("otp_verify_success", {
+        phone: values.phoneNumber,
+      });
       setFirstTimeLoggedIn();
       dismiss();
     } catch (error) {
+      PosthogLogger.capture("otp_send_failed", {
+        phone: values.phoneNumber,
+        error: error as string,
+      });
       if (error instanceof OtpError) {
         Toast.show({
           type: "error",

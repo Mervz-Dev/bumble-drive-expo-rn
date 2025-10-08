@@ -29,7 +29,6 @@ const SearchDestination = () => {
   const posthog = usePostHog();
 
   useEffect(() => {
-    console.log("triggered");
     posthog.capture("SearchDestination loaded", { foo: "bar" });
   }, []);
 
@@ -73,7 +72,7 @@ const SearchDestination = () => {
 
             <TouchableOpacity
               onPress={async () => {
-                // await logout();
+                await logout();
               }}
               className="w-10 h-10 items-center justify-center rounded-full bg-gray-100 shadow-sm mt-2"
             >

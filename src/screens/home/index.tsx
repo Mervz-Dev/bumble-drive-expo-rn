@@ -19,7 +19,7 @@ const Home = () => {
     if (session) {
       router.push("/private/search-destination");
     } else {
-      router.push("/login");
+      router.push("/(auth)/login");
     }
   };
 
